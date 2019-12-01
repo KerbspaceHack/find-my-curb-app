@@ -1,5 +1,6 @@
 import React from 'react'
-import {View, Text} from 'react-native';
+import {View, Image} from 'react-native';
+import image from '../../../../assets/confirm.png'
 
 export default class Confirmation extends React.PureComponent {
     constructor(props) {
@@ -9,7 +10,7 @@ export default class Confirmation extends React.PureComponent {
     render() {
         return (
             <View>
-                <Text>Hi</Text>
+                <Image source={image} style={{width:'100%', height:'100%'}} />
             </View>
         )
     }

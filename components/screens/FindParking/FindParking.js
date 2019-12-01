@@ -63,8 +63,8 @@ export default class FindParking extends React.Component {
   }
 
   async startConversation () {
-    setTimeout(() => this.onFindParking(), 20000);
-    setTimeout(() => this.onAcceptingParking(), 30000);
+    setTimeout(() => this.onFindParking(), 30000);
+    setTimeout(() => this.onAcceptingParking(), 38000);
   }
 
   onFindParking () {
