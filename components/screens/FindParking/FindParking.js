@@ -4,6 +4,8 @@ import Constants from "expo-constants";
 import {getCurrentPosition, getDirections} from "../../../api/features/location";
 import Search from "./Search/Search";
 import Map from "./Map/Map";
+import {getParkingSlots} from "../../../api/features/parking";
+import throttle from 'lodash/throttle'
 
 export default class FindParking extends React.Component {
   constructor(props) {
@@ -19,11 +21,7 @@ export default class FindParking extends React.Component {
         latitudeDelta: 0.5,
         longitudeDelta: 0.5,
       },
-      parkingSpots: {
-        loading: false,
-        error: false,
-        spots: []
-      },
+      parkingSpots: [],
       parkingSpotSelected: false
     }
   }
@@ -42,12 +40,21 @@ export default class FindParking extends React.Component {
     const directions = await getDirections(destination)
   }
 
+  async getParkingSlots (region) {
+    return await getParkingSlots(region)
+  }
+
   onSearchInputUpdate (searchInput) {
     this.setState({ searchInput })
   }
 
   onRegionChange (region) {
     this.setState({ region })
+    throttle(() => {
+      const parkingSlots = this.getParkingSlots(region)
+      this.setState({ parkingSlots })
+    }, 1000)
+
   }
 
   render() {
@@ -56,12 +63,12 @@ export default class FindParking extends React.Component {
       <View style={styles.container}>
         <Search
           value={searchInput}
-          onChangeText={this.onSearchInputUpdate}
-          showLoading={parkingSpots.loading} />
+          onChangeText={this.onSearchInputUpdate} />
         <Map
           style={styles.mapStyle}
           region={region}
           routeCoords={routeCoords}
+          parkingSpots={parkingSpots}
           onRegionChangeComplete={this.onRegionChange}
           showsUserLocation={true} />
         {
