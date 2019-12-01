@@ -1,10 +1,10 @@
 {
   "devToolsPort": 19002,
   "expoServerPort": 19000,
-  "packagerPort": 19001,
-  "packagerPid": 28954,
-  "expoServerNgrokUrl": "https://yb-tvv.nennes.find-my-curb-app.exp.direct",
-  "packagerNgrokUrl": "https://packager.yb-tvv.nennes.find-my-curb-app.exp.direct",
-  "ngrokPid": 28989,
+  "packagerPort": 19004,
+  "packagerPid": 25448,
+  "expoServerNgrokUrl": "https://yb-tvv.anonymous.find-my-curb-app.exp.direct",
+  "packagerNgrokUrl": "https://packager.yb-tvv.anonymous.find-my-curb-app.exp.direct",
+  "ngrokPid": 25459,
   "webpackServerPort": null
 }
