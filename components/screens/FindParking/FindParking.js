@@ -11,7 +11,7 @@ export default class FindParking extends React.Component {
   constructor(props) {
     super(props)
     this.onSearchInputUpdate = this.onSearchInputUpdate.bind(this)
-    this.onRegionChange = this.onRegionChange.bind(this)
+    this.onRegionChange = throttle(this.onRegionChange.bind(this), 5000)
     this.state = {
       searchInput: '',
       routeCoords: [],
@@ -21,44 +21,36 @@ export default class FindParking extends React.Component {
         latitudeDelta: 0.5,
         longitudeDelta: 0.5,
       },
-      parkingSpots: [],
-      parkingSpotSelected: false
+      parkingSlots: {},
+      parkingSlotselected: false
     }
   }
 
-  async componentDidMount () {
-    const {coords} = await getCurrentPosition()
-    const {latitude, longitude} = coords
-    const origin = `${latitude},${longitude}`
+  componentDidMount () {
+    getCurrentPosition()
+      .then(({coords}) => {
+        const {latitude, longitude} = coords
+        const origin = `${latitude},${longitude}`
 
-    this.setState(({region: {latitude, longitude, latitudeDelta: 0.02, longitudeDelta: 0.02}}))
-    const routeCoords = await getDirections(origin, 'Buckingham Palace')
-    this.setState({ routeCoords })
-  }
-
-  async getDirections (destination) {
-    const directions = await getDirections(destination)
-  }
-
-  async getParkingSlots (region) {
-    return await getParkingSlots(region)
+        this.setState(({region: {latitude, longitude, latitudeDelta: 0.02, longitudeDelta: 0.02}}))
+        return getDirections(origin, 'Buckingham Palace')
+          .then(routeCoords => {this.setState({ routeCoords })})
+      })
   }
 
   onSearchInputUpdate (searchInput) {
     this.setState({ searchInput })
   }
 
-  onRegionChange (region) {
-    this.setState({ region })
-    throttle(() => {
-      const parkingSlots = this.getParkingSlots(region)
-      this.setState({ parkingSlots })
-    }, 1000)
-
+  async onRegionChange (region) {
+    getParkingSlots(region)
+      .then(parkingSlots => {
+        this.setState({ region, parkingSlots })
+      })
   }
 
   render() {
-    const {searchInput, region, parkingSpots, routeCoords, parkingSpotSelected} = this.state
+    const {searchInput, region, parkingSlots, routeCoords, parkingSlotselected} = this.state
     return (
       <View style={styles.container}>
         <Search
@@ -68,11 +60,11 @@ export default class FindParking extends React.Component {
           style={styles.mapStyle}
           region={region}
           routeCoords={routeCoords}
-          parkingSpots={parkingSpots}
+          parkingSlots={parkingSlots}
           onRegionChangeComplete={this.onRegionChange}
           showsUserLocation={true} />
         {
-          parkingSpotSelected &&
+          parkingSlotselected &&
           <View
             style={styles.infoStyle}>
             <Text>Latitude: { region.latitude}</Text>
