@@ -23,6 +23,14 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "android": {
+      "package": "com.kerbspacehack.gopark",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDQR6sJ7-CYI5nuugse40NROoGQxzoK72g"
+        }
+      }
+    },
     "ios": {
       "supportsTablet": true
     }
