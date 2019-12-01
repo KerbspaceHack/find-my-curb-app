@@ -1,20 +1,21 @@
 import React from 'react'
+import Constants from 'expo-constants'
 import {
+  View,
   Button
 } from 'react-native';
 
 class Home extends React.Component {
-  static navigationOptions = {
-    title: 'Home',
-  };
   render() {
     const {navigate} = this.props.navigation;
     return (
-      <Button
-        title="Go to Map"
-        onPress={() => navigate('Map')}
-      />
-    );
+      <View style={{marginTop: Constants.statusBarHeight}}>
+        <Button
+          title="Go to Map"
+          onPress={() => navigate('Map')}
+        />
+      </View>
+    )
   }
 }
 
