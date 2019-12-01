@@ -2,3 +2,5 @@
 node_modules
 .idea
 find-my-curb-app.iml
+.expo*
+.expo/packager-info.json

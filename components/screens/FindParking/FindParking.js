@@ -4,6 +4,7 @@ import Constants from "expo-constants";
 import {getCurrentPosition, getDirections} from "../../../api/features/location";
 import Search from "./Search/Search";
 import Map from "./Map/Map";
+import * as Speech from 'expo-speech';
 
 export default class FindParking extends React.Component {
   constructor(props) {
@@ -24,7 +25,12 @@ export default class FindParking extends React.Component {
         error: false,
         spots: []
       },
-      parkingSpotSelected: false
+      parkingSpotSelected: false,
+      foundParking: {
+        spoke: false,
+        found: false,
+        redirect: false
+      }
     }
   }
 
@@ -36,10 +42,50 @@ export default class FindParking extends React.Component {
     this.setState(({region: {latitude, longitude, latitudeDelta: 0.02, longitudeDelta: 0.02}}))
     const routeCoords = await getDirections(origin, 'Buckingham Palace')
     this.setState({ routeCoords })
+
+    setTimeout(() => this.setState({foundParking: {found: true}}), 10000)
+  }
+
+  async componentDidUpdate(prevProps, prevState, snapshot) {
+    if(this.state.foundParking.found && !this.state.foundParking.spoke) {
+      await this.startConversation()
+      this.setState({foundParking: {spoke: true}})
+    }
+    if(this.state.foundParking.redirect) {
+      this.redirectToConfirmation()
+    }
+  }
+
+  redirectToConfirmation () {
+    this.props.navigation.navigate('Confirm', {address: '12 Park street, Camden Town, London NW1 8AF'})
   }
 
   async getDirections (destination) {
     const directions = await getDirections(destination)
+  }
+
+  async startConversation () {
+    setTimeout(() => this.onFindParking(), 20000);
+    setTimeout(() => this.onAcceptingParking(), 30000);
+  }
+
+  onFindParking () {
+    this.speakFoundParking()
+  }
+
+  onAcceptingParking () {
+    this.speakAcceptingParking()
+    this.setState({foundParking: {redirect: true}})
+  }
+
+  speakAcceptingParking () {
+    const thingToSay = 'Fantastic, sending the address to you now.'
+    Speech.speak(thingToSay);
+  }
+
+  speakFoundParking () {
+    const thingToSay = 'I found a parking space 2 minutes away, shall I redirect you there?'
+    Speech.speak(thingToSay);
   }
 
   onSearchInputUpdate (searchInput) {
@@ -72,8 +118,6 @@ export default class FindParking extends React.Component {
             <Text>Longitude: {region.longitude}</Text>
           </View>
         }
-
-
       </View>
     );
   }
