@@ -1,20 +1,22 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Constants from "expo-constants";
-import {getCurrentPosition, getDirections} from "../../../api/features/location";
+import {getCurrentPosition, getDirections, getZoomedInRegion} from "../../../api/features/location";
 import Search from "./Search/Search";
 import Map from "./Map/Map";
+import {lookingToPark, getParkingSlots} from "../../../api/features/parking";
 import * as Speech from 'expo-speech';
-import {getParkingSlots} from "../../../api/features/parking";
 import throttle from 'lodash/throttle'
+import get from 'lodash/get'
+import DestinationDetails from "./DestinationDetails/DestinationDetails";
 
 export default class FindParking extends React.Component {
   constructor(props) {
     super(props)
-    this.onSearchInputUpdate = this.onSearchInputUpdate.bind(this)
+    this.onDestinationSelect = this.onDestinationSelect.bind(this)
+    this.onNavigate = this.onNavigate.bind(this)
     this.onRegionChange = throttle(this.onRegionChange.bind(this), 5000)
     this.state = {
-      searchInput: '',
       routeCoords: [],
       region: {
         latitude: 51.485,
@@ -28,22 +30,19 @@ export default class FindParking extends React.Component {
         spoke: false,
         found: false,
         redirect: false
-      }
+      },
+      showDestinationDetails: false
     }
+
   }
 
   componentDidMount () {
     getCurrentPosition()
       .then(({coords}) => {
-        const {latitude, longitude} = coords
-        const origin = `${latitude},${longitude}`
-
-        this.setState(({region: {latitude, longitude, latitudeDelta: 0.02, longitudeDelta: 0.02}}))
-        return getDirections(origin, 'Buckingham Palace')
-          .then(routeCoords => {this.setState({ routeCoords })})
+        this.setState({region: getZoomedInRegion(coords)})
       })
 
-    setTimeout(() => this.setState({foundParking: {found: true}}), 10000)
+    // setTimeout(() => this.setState({foundParking: {found: true}}), 10000)
   }
 
   async componentDidUpdate(prevProps, prevState, snapshot) {
@@ -58,10 +57,6 @@ export default class FindParking extends React.Component {
 
   redirectToConfirmation () {
     this.props.navigation.navigate('Confirm', {address: '12 Park street, Camden Town, London NW1 8AF'})
-  }
-
-  async getDirections (destination) {
-    const directions = await getDirections(destination)
   }
 
   async startConversation () {
@@ -92,24 +87,39 @@ export default class FindParking extends React.Component {
     return await getParkingSlots(region)
   }
 
-  onSearchInputUpdate (searchInput) {
-    this.setState({ searchInput })
+  onNavigate () {
+    this.setState({showDestinationDetails: false})
+  }
+
+  onDestinationSelect(destinationDetails) {
+    const destinationCoords =  get(destinationDetails, 'geometry.location', {})
+    this.setState(state => {
+      getDirections(state.region, destinationCoords)
+        .then(routeCoords => {
+          if (routeCoords.length > 0) {
+            this.setState({
+              routeCoords,
+              showDestinationDetails: true,
+              region: getZoomedInRegion(destinationCoords)
+            })
+          }
+        })
+    })
   }
 
   async onRegionChange (region) {
-    getParkingSlots(region)
+    lookingToPark(region)
       .then(parkingSlots => {
         this.setState({ region, parkingSlots })
       })
   }
 
   render() {
-    const {searchInput, region, parkingSlots, routeCoords, parkingSlotselected} = this.state
+    const {region, parkingSlots, routeCoords, destinationDetails, showDestinationDetails} = this.state
     return (
       <View style={styles.container}>
         <Search
-          value={searchInput}
-          onChangeText={this.onSearchInputUpdate} />
+          onDestinationSelect={this.onDestinationSelect}/>
         <Map
           style={styles.mapStyle}
           region={region}
@@ -118,12 +128,8 @@ export default class FindParking extends React.Component {
           onRegionChangeComplete={this.onRegionChange}
           showsUserLocation={true} />
         {
-          parkingSlotselected &&
-          <View
-            style={styles.infoStyle}>
-            <Text>Latitude: { region.latitude}</Text>
-            <Text>Longitude: {region.longitude}</Text>
-          </View>
+          showDestinationDetails &&
+          <DestinationDetails onNavigate={this.onNavigate} />
         }
       </View>
     );
@@ -134,8 +140,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginTop: Constants.statusBarHeight
-  },
-  infoStyle: {
-    height: 100
   }
 });
